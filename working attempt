@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Sat Mar 20 19:36:35 2021
+
+@author: joshua.atienza
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Sat Mar 20 18:49:26 2021
 
 @author: joshua.atienza
@@ -42,21 +50,21 @@ def generate_field(d, n):
     mine_count = 0
     
     #Add a new cell in the range
-    for i in range(d**2):
-        cell = Cell(i)
+    for x in range(d**2):
+        cell = Cell(x)
         field.append(cell)
         
     #Randomly generate a mine in a given cell, increase count
-    for i in range(n):
+    while mine_count < n:
         temp = random.randrange(d**2)
         if(field[temp].isMine == False):
             field[temp].isMine = True
             mine_count = mine_count + 1
     
     #Add information to each cell in the field
-    for i in range(d**2):
-        add_knowledge(field, field[i], d)
-        field[i].Hidden.extend(field[i].Neighbors)
+    for x in range(d**2):
+        neighborinfo = add_knowledge(field, field[x], d)
+        field[x].Hidden.extend(field[x].Neighbors)
         
     return field
 
@@ -79,16 +87,12 @@ Add information about the neighbors of a given cell, and increase number of mine
 """
 def add_knowledge(field, cell, d):
     
-    #Initialize variables
     index = cell.index
     dimension = d
-    column = index % dimension
-    left_corner = 0
-    bottom_corner = dimension**2 - 1
     
     #Dictionary of possible cardinal, ordinal directions of mine
     #Initialize them to true
-    directions = {
+    possibleMoves = {
         
         "north": True,
         "south": True,
@@ -100,76 +104,67 @@ def add_knowledge(field, cell, d):
         "south-east": True
         
     }
+    
+    # Check for maze boundary conditions
+    if (index - dimension < 0): # top edge
+        possibleMoves["north"] = False
+    if (index + dimension > dimension**2-1): #bottom edge
+        possibleMoves["south"] = False
+    if (index%dimension == 0): # left edge
+        possibleMoves["west"] = False
+    if (index%dimension == dimension-1): # right edge
+        possibleMoves["east"] = False
+    if (possibleMoves["north"] & possibleMoves["west"] == False):
+        possibleMoves["north-west"] = False
+    if (possibleMoves["north"] & possibleMoves["east"] == False):
+        possibleMoves["north-east"] = False
+    if (possibleMoves["south"] & possibleMoves["west"] == False):
+        possibleMoves["south-west"] = False
+    if (possibleMoves["south"] & possibleMoves["east"] == False):
+        possibleMoves["south-east"] = False
 
-    #Check possible moves for top-left corner (first index) and bottom-right corner (last index)
-    if (index - dimension < left_corner):
-        directions["north"] = False
-    if (index + dimension > bottom_corner):
-        directions["south"] = False
+    for x in possibleMoves.keys():
         
-    #Check possible moves for leftmost and rightmost columns
-    if (column == 0):
-        directions["west"] = False
-    if (column == dimension-1):
-        directions["east"] = False
+        if(possibleMoves[x] == True):
+            if(x=="north"):
+                if(field[index-d].isMine == True):
+                    cell.numMines += 1
+                cell.Neighbors.append(index-d)
+            elif(x=="south"):
+                if field[index+d].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index+d)
+            elif(x=="west"): 
+                if field[index-1].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index-1)
+            elif(x=="east"):
+                if field[index+1].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index+1)
+            elif(x=="north-west"):
+                if field[index-d-1].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index-d-1)
+            elif(x=="north-east"):
+                if field[index-d+1].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index-d+1)
+            elif(x=="south-west"):
+                if field[index+d-1].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index+d-1)
+                xyz
+            elif(x=="south-east"):
+                if field[index+d+1].isMine == True:
+                    cell.numMines += 1
+                cell.Neighbors.append(index+d+1)  
         
-    #Check possibly moves in the ordinal directions
-    if (directions["north"] & directions["west"] == False):
-        directions["north-west"] = False
-    if (directions["north"] & directions["east"] == False):
-        directions["north-east"] = False
-    if (directions["south"] & directions["west"] == False):
-        directions["south-west"] = False
-    if (directions["south"] & directions["east"] == False):
-        directions["south-east"] = False
-
-    # Loop through all the possible directions to update the number of mines
-    # and neighbors for valid moves
-    for move in directions.keys():
-        
-        #Update the values of node for valid directional moves
-        if(directions[move] == True):
-
-            if(move == "north"):
-                if(field[index - d].isMine == True):
-                    cell.numMines += 1
-                cell.Neighbors.append(index - d)
-            elif(move == "south"):
-                if field[index + d].isMine == True:
-                    cell.numMines += 1
-                cell.Neighbors.append(index + d)
-            elif(move == "west"): 
-                if field[index - 1].isMine == True:
-                    cell.numMines += 1
-                cell.Neighbors.append(index - 1)
-            elif(move == "east"):
-                if field[index + 1].isMine == True:
-                    cell.numMines += 1
-                cell.Neighbors.append(index + 1)
-            elif(move == "north-west"):
-                if field[index - d - 1].isMine == True:
-                    cell.numMines += 1
-                cell.Neighbors.append(index - d - 1)
-            elif(move == "north-east"):
-                if field[index - d + 1].isMine == True:
-                    cell.numMines += 1
-                cell.Neighbors.append(index - d + 1)
-            elif(move == "south-west"):
-                if field[index + d - 1].isMine == True:
-                    cell.numMines += 1
-                cell.Neighbors.append(index + d - 1)
-            elif(move == "south-east"):
-                if field[index + d + 1].isMine == True:
-                    cell.numMines += 1  
-                cell.Neighbors.append(index + d + 1)  
-        
-    return directions 
+    return possibleMoves 
 
 
-"""
-Code for our basic agent
-"""
-def simpleAgent(field, dim):
+
+def simpleAgent(field,dim):
     idmines=[]
     expmines=[]
     safe=[]
@@ -262,7 +257,7 @@ def main():
     mines=[]
     t=time.time()
     for x in range(iterations):
-        mazefield=generate_field(dim,mineTotal)
+        mazefield = generate_field(dim,mineTotal)
         mazefieldCopy = copy.deepcopy(mazefield)
         mazefieldMineCount=copy.deepcopy(mazefield)
         minesdetected=simpleAgent(mazefield,dim)
