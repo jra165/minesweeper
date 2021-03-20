@@ -40,68 +40,102 @@ def createField(dim,mines):
             field[temp].isMine = True
             count = count+1
     for x in range(dim**2):
-        neighborinfo=checkneighbors(field,field[x],dim)
+        add_knowledge(field,field[x],dim)
         field[x].Hidden.extend(field[x].Neighbors)
     return field
 
-def checkneighbors(field,node,dim):
-    index=node.index
-    dimension=dim
-    possibleMoves = [True, True, True, True, True, True, True, True] # up, down, left, right, up-left, up-right, down-left, down-right
-    # Check for maze boundary conditions
-    if (index - dimension < 0): # top edge
-        possibleMoves[0] = False
-    if (index + dimension > dimension**2-1): #bottom edge
-        possibleMoves[1] = False
-    if (index%dimension == 0): # left edge
-        possibleMoves[2] = False
-    if (index%dimension == dimension-1): # right edge
-        possibleMoves[3] = False
-    if (possibleMoves[0] & possibleMoves[2] == False):
-        possibleMoves[4] = False
-    if (possibleMoves[0] & possibleMoves[3] == False):
-        possibleMoves[5] = False
-    if (possibleMoves[1] & possibleMoves[2] == False):
-        possibleMoves[6] = False
-    if (possibleMoves[1] & possibleMoves[3] == False):
-        possibleMoves[7] = False
+def add_knowledge(field,node,dim):
+    
+    #Initialize variables
+    index = node.index
+    dimension = dim
+    column = index % dimension
+    
+    #Dictionary of possible cardinal, ordinal directions of mine
+    #Initialize them to true
+    directions = {
+        
+        "north": True,
+        "south": True,
+        "west": True,
+        "east": True,
+        "north-west": True,
+        "north-east":True,
+        "south-west": True,
+        "south-east": True
+        
+    }
+    
+    #Variables of top-left corner and bottom-right corner
+    left_corner = 0
+    bottom_corner = dimension**2 - 1
+    
+    #Check possible moves for top-left corner (first index) and bottom-right corner (last index)
+    if (index - dimension < left_corner): # top edge
+        directions["north"] = False
+    if (index + dimension > bottom_corner): #bottom edge
+        directions["south"] = False
+        
+    #Check possible moves for leftmost and rightmost columns
+    if (column == 0):
+        directions["west"] = False
+    if (column == dimension-1):
+        directions["east"] = False
+        
+    #Check possibly moves in the ordinal directions
+    if (directions["north"] == False and directions["west"] == False):
+        directions["north-west"] = False
+    if (directions["north"] == False and directions["east"] == False):
+        directions["north-east"] = False
+    if (directions["south"] == False and directions["west"] == False):
+        directions["south-west"] = False
+    if (directions["south"] == False and directions["east"] == False):
+        directions["south-east"] = False
 
-    for x in range(len(possibleMoves)):
-        if(possibleMoves[x] == True):
-            if(x==0):
+    # Loop through all the possible directions to update the number of mines
+    # and neighbors for valid moves
+    for move in directions.values():
+        
+        #Continue if a directional move is invalid
+        if(move == False):
+            continue
+        
+        #Update the values of node for valid directional moves
+        else:
+            if(move == "north"):
                 if(field[index-dim].isMine == True):
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index-dim)
-            elif(x==1):
+            elif(move == "south"):
                 if field[index+dim].isMine == True:
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index+dim)
-            elif(x==2): 
+            elif(move == "west"): 
                 if field[index-1].isMine == True:
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index-1)
-            elif(x==3):
+            elif(move == "east"):
                 if field[index+1].isMine == True:
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index+1)
-            elif(x==4):
+            elif(move == "north-west"):
                 if field[index-dim-1].isMine == True:
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index-dim-1)
-            elif(x==5):
+            elif(move == "north-east"):
                 if field[index-dim+1].isMine == True:
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index-dim+1)
-            elif(x==6):
+            elif(move == "south-west"):
                 if field[index+dim-1].isMine == True:
                     node.numMines=node.numMines+1
                 node.Neighbors.append(index+dim-1)
-            elif(x==7):
+            elif(move == "south-east"):
                 if field[index+dim+1].isMine == True:
                     node.numMines=node.numMines+1  
                 node.Neighbors.append(index+dim+1)  
         
-    return possibleMoves 
+    return directions 
 
 def printfield(field,dimension):
     print("\n")
