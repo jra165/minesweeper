@@ -150,7 +150,6 @@ def simpleAgent(field,dim):
         elif(len(safe) > 0):                            # path if still safe nodes
             ranindex=safe.pop(0)                        # get first index on safe list
             ranspace=field[ranindex]                    # use index to get safe node
-            print("trying to remove ", ranindex)
             if ranindex in unsearched:
                 unsearched.remove(ranindex)                 # remove safe node from unsearched
             field[ranindex].isCovered=False             # reveal the node
@@ -173,7 +172,8 @@ def simpleAgent(field,dim):
                 for x in range(len(ranspace.Hidden)):   # for all hidden neighbors
                   #  print(ranspace.Hidden)
                     if((ranspace.Hidden[x] not in idmines)):    # if the mine is not ID'd
-                        unsearched.remove(ranspace.Hidden[x])   # remove mine from unsearched
+                        if ranspace.Hidden[x] in unsearched:
+                            unsearched.remove(ranspace.Hidden[x])   # remove mine from unsearched
                         idmines.append(ranspace.Hidden[x])      # append mine to ID mines
                     minedetect(field,field[ranspace.Hidden[x]]) # pass neighbor into mine detect - mine detect tells all the mines neighbors, its been ID'd
                     for y in range(len(field)):                 # for all nodes in the field - remove ranspace node from hidden node list of each node
@@ -203,7 +203,7 @@ def simpleAgent(field,dim):
         print("Explored")
         print(explored)   
         print("current status")
-        printfield(env, 3)
+        printfield(env, 6)
         #for z in range(len(field)):
             #print(field[z])
     return len(idmines)
@@ -216,5 +216,5 @@ def minedetect(field,node):
 
 
 
-env = createField(3, 2)
-simpleAgent(env, 2)
+env = createField(6, 6)
+simpleAgent(env, 6)
