@@ -151,7 +151,8 @@ def simpleAgent(field,dim):
             ranindex=safe.pop(0)                        # get first index on safe list
             ranspace=field[ranindex]                    # use index to get safe node
             print("trying to remove ", ranindex)
-            unsearched.remove(ranindex)                 # remove safe node from unsearched
+            if ranindex in unsearched:
+                unsearched.remove(ranindex)                 # remove safe node from unsearched
             field[ranindex].isCovered=False             # reveal the node
             # print("Current Node")
             # print(ranindex,"\n",len(unsearched))
@@ -161,7 +162,8 @@ def simpleAgent(field,dim):
             expmines.append(ranspace.index)             
             for x in range(len(ranspace.Neighbors)):
                 field[ranspace.Neighbors[x]].numIdMines.append(ranspace.index)
-                field[ranspace.Neighbors[x]].Hidden.remove(ranspace.index)
+                if ranspace.index in field[ranspace.Neighbors[x]].Hidden:
+                    field[ranspace.Neighbors[x]].Hidden.remove(ranspace.index)
 
         # Randomly selected a safe cell
         #address neighbors when removing
