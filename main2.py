@@ -15,12 +15,12 @@ import random
 class Cell:
     def __init__(self, coord):
         self.coord = coord
-        
+
         #status 0:covered, 1:bomb, clue:safe
         self.status = 0
-        self.safeCells = []
-        self.foundMines = []
-        self.hidden = []
+        self.safeNeighbors = []
+        self.mineNeighbors = []
+        self.hiddenNeighbors = []
         return 
     def __str__(self):
         nodestr="My index value is {}, my space is a mine? {}, I am covered? {}, I am surrounded by {} mines, I am surrounded by {} safe squares, I have identified {} mines, I am surrounded by {} hidden squares, they have indices of {}."
@@ -84,21 +84,41 @@ while len(cellsHidden)!=0:
     x = random.randint(0, d-1)
     y = random.randint(0, d-1)
     clue = env[x][y]
-
+    agentCell = aTracker[x][y]
     #if randomly found bomb
     if(clue == -1):
         minesExploded.append([x,y])
-        cellsHidden.pop([x,y])
-        aTracker[x][y].status = clue
+        minesMarked.append([x,y])
+        cellsHidden.remove([x,y])
+        agentCell.status = clue
         break
     else:
         cellsSafe.append([x,y])
-        cellsHidden.pop([x,y])
-        aTracker[x][y].status = clue
+        cellsHidden.remove([x,y])
+        agentCell.status = clue
+        if(clue - len(agentCell.mineNeighbors) == len(agentCell.hiddenNeighbors)):
+            for h in range(len(agentCell.hiddenNeighbors)):   # for all hidden neighbors
+                if((agentCell.hiddenNeighbors[h] not in minesMarked)):    # if the mine is not ID'd
+                    cellsHidden.remove(agentCell.hiddenNeighbors[x])   # remove mine from unsearched
+                    minesMarked.append(agentCell.hiddenNeighbors[x])      # append mine to ID mines
+                for x in range(d):
+                    for y in range(d):                 # for all nodes in the field - remove ranspace node from hidden node list of each node
+                        if agentCell.coord in aTracker[x][y].hiddenNeighbors:
+                            aTracker[x][y].hiddenNeighbors.remove(agentCell.coord)
+            #ranspace.Hidden.clear() # no more hidden nodes in ranspace
+        elif(clue - agentCell.minesMarked - len(agentCell.safeNeighbors) == len(agentCell.hiddenNeighbors)): 
+            for i in range(len(agentCell.hiddenNeighbors)):       # for all hidden neighbors
+                    if(agentCell.hiddenNeighbors[i] not in cellsSafe):         # if neighbor index is not in safe
+                        cellsSafe.append(agentCell.hiddenNeighbors[i])         # add neighbor index to 
+                        aTracker[x][y]
+            agentCell.hiddenNeighbors.clear()    
+        
 
-
-
-
+        break
+for x in range(d):
+    for y in range(d):   
+        print(aTracker[x][y].status, end =" ")
+    print('')
 
 #• If, for a given cell, the total number of mines (the clue) minus the number of revealed mines is the number of
 #  hidden neighbors, every hidden neighbor is a mine.
