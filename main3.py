@@ -171,7 +171,7 @@ def add_knowledge(field, cell, d):
 """
 Code for our basic agent
 """
-def simpleAgent(field, dim):
+def simple_agent(field, dim):
 
     # The Agent's information about the environment
     minesMarked = []
@@ -278,7 +278,7 @@ def print_info(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, c
 """
 Code for advanced agent
 """
-def advAgent(field, dim):
+def adv_agent(field, dim):
     
     # The Agent's information about the environment
     minesMarked = []
@@ -300,6 +300,152 @@ def advAgent(field, dim):
         
         #Make a random move
         if(len(cellsSafe) == 0):
+            
+            ranindex = random.randrange(len(cellsHidden))      
+            agentCell = field[cellsHidden[ranindex]]            
+            cellsHidden.pop(ranindex)
+            
+        #Choose a known safe cell    
+        elif(len(cellsSafe) > 0):                            
+
+            ranindex = cellsSafe.pop(0)                        
+            agentCell = field[ranindex]     
+
+            #If chosen cell in Hidden, remove                    
+            if(ranindex in cellsHidden):
+                cellsHidden.remove(ranindex)               
+
+        # If random move was a mine, update Agent knowledge
+        if(agentCell.isMine == True):
+            minesExploded.append(agentCell.index)             
+            for x in range(len(agentCell.neighborsAll)):
+                field[agentCell.neighborsAll[x]].agentsMines += 1
+                
+                #Remove condition
+                if(agentCell.index in field[agentCell.neighborsAll[x]].neighborsHidden):
+                    field[agentCell.neighborsAll[x]].neighborsHidden.remove(agentCell.index)
+            
+                    
+        # If random move was not a mine, check for the conditions that the Simple Agent recognizes
+        else:
+        
+            cellsExplored.append(agentCell.index)
+            
+            #  If, for a given cell, the total number of mines (the clue) minus the number of revealed mines is the number of
+            #  hidden neighbors, every hidden neighbor is a mine.
+            if(agentCell.clue - agentCell.agentsMines == len(agentCell.neighborsHidden)):
+                
+                for x in range(len(agentCell.neighborsHidden)):
+                    
+                    #If mine is not marked, remove from cellsHidden list, and add to minesMarked
+                    if((agentCell.neighborsHidden[x] not in minesMarked)):
+                        cellsHidden.remove(agentCell.neighborsHidden[x])
+                        minesMarked.append(agentCell.neighborsHidden[x])
+                        isDone[agentCell.neighborsHidden[x]] = True
+                    
+                    #Increase mine count
+                    cell = field[agentCell.neighborsHidden[x]]
+                    for i in range(len(cell.neighborsAll)):
+                        field[cell.neighborsAll[i]].agentsMines += 1
+                    
+                    # remove agentCell from cellsHidden
+                    for y in range(len(field)):                 
+                        if agentCell.neighborsHidden[x] in field[y].neighborsHidden and y != agentCell.index:
+                            field[y].neighborsHidden.remove(agentCell.neighborsHidden[x])
+                
+                #neighbors have been revealed
+                agentCell.neighborsHidden.clear()
+            
+            #   If, for a given cell, the total number of safe neighbors (8 - clue) minus the number of revealed safe neighbors 
+            #   is the number of hidden neighbors, every hidden neighbor is safe.
+            elif(len(agentCell.neighborsAll)-agentCell.clue-len(agentCell.neighborsSafe)==len(agentCell.neighborsHidden)):
+                for x in range(len(agentCell.neighborsAll)):
+                    
+                    if(agentCell.neighborsAll[x] not in cellsSafe and (not isDone[agentCell.neighborsAll[x]])):
+                        cellsSafe.append(agentCell.neighborsAll[x])
+                        
+                agentCell.neighborsHidden.clear()
+                
+            for x in range(len(agentCell.neighborsAll)):
+                
+                if (agentCell not in field[agentCell.neighborsAll[x]].neighborsSafe) :
+                    field[agentCell.neighborsAll[x]].neighborsSafe.append(agentCell)
+                    
+                if len(field[agentCell.neighborsAll[x]].neighborsHidden) != 0:
+                    if(agentCell.index in field[agentCell.neighborsAll[x]].neighborsHidden):
+                        field[agentCell.neighborsAll[x]].neighborsHidden.remove(agentCell.index)
+        
+
+        # Run only if we have extracted all information from a given cell
+        if(len(agentCell.neighborsAll) - agentCell.agentsMines - len(agentCell.neighborsSafe) == 0 or agentCell.isMine):
+            
+            #Set a cell to Done if we have extracted all information from it
+            temp = agentCell.index
+            if(temp in cellsExplored):
+                cellsExplored.remove(temp)
+            if(temp in cellsSafe):
+                cellsSafe.remove(temp)
+            isDone[temp] = True
+            
+            # Add explored cells to safe, eliminating duplicates with set
+            cellsSafe = list(set().union(cellsExplored, cellsSafe))
+            cellsExplored.clear()
+        
+        #Run if we do not know all information about a given cell
+        else:
+            
+            temp = []
+            for x in range(len(cellsExplored)):
+                
+                #
+                cell = cellsExplored[x]
+                if (len(field[cell].neighborsAll)-field[cell].clue - len(field[cell].neighborsSafe) == len(field[cell].neighborsHidden) 
+                    or field[cell].clue - field[cell].agentsMines == len(field[cell].neighborsHidden)):
+                    temp.append(cell)
+                    cellsSafe.append(cell)
+        
+            for y in range(len(temp)):
+                cellsExplored.remove(temp[y])
+                
+        #Print all relevant information about the current state of the field        
+        print_info_advanced(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, cellsExplored, isDone)
+          
+    return minesMarked, minesExploded
+
+"""
+Code for advanced agent
+"""
+def adv_agent_mine_count(field, dim, mine_count):
+    
+    # The Agent's information about the environment
+    minesMarked = []
+    minesExploded = []
+    cellsSafe = []
+    cellsHidden = []
+    cellsExplored = []
+    counter = 0
+    
+    #Create a dictionary of booleans, indicating whether or not a cell is "Done"
+    isDone = [False] * len(field)
+    
+    # Initialize the Agent's knowledge
+    for x in range(len(field)):
+        cellsHidden.append(field[x].index)
+    
+    
+    # Explore the entire environment
+    while(len(cellsHidden) != 0 or len(cellsSafe) != 0):
+
+        #Modification for if we know how many mines are in the field
+        if mine_count - len(minesMarked) - len(minesExploded) == len(cellsHidden):
+            if(mine_count - len(minesMarked) - len(minesExploded) ==0):
+                return len(minesMarked)
+            while(mine_count - len(minesMarked) - len(minesExploded) != 0):
+                minesMarked.append(cellsHidden.pop(0))
+                counter += 1
+                
+        #Make a random move
+        elif(len(cellsSafe) == 0):
             
             ranindex = random.randrange(len(cellsHidden))      
             agentCell = field[cellsHidden[ranindex]]            
@@ -441,9 +587,10 @@ def main():
         mazefield = generate_field(dim,mineTotal)
         mazefieldCopy = copy.deepcopy(mazefield)
         mazefieldMineCount = copy.deepcopy(mazefield)
-        #minesdetected=simpleAgent(mazefield,dim)
-        minesdetected2=advAgent(mazefieldCopy,dim)
+        #minesdetected=simple_agent(mazefield,dim)
+        #minesdetected2=adv_agent(mazefieldCopy,dim)
         #advanced.append(minesdetected2)
+        minesdetected3 = adv_agent_mine_count(mazefieldCopy,dim,mineTotal)
 
 if __name__ == "__main__":
     main()
