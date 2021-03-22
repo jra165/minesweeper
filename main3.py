@@ -15,6 +15,7 @@ import time
 class Cell:
     
     def __init__(self, index):
+        
         self.index = index
 
         self.isMine = False
@@ -53,13 +54,15 @@ def generate_field(d, n):
     
     #Add information to each cell in the field
     for i in range(d**2):
+        
         add_knowledge(field, field[i], d)
         field[i].neighborsHidden.extend(field[i].neighborsAll)
         
     return field
 
 #Prints the field
-def print_field(field,d):
+def print_field(field, d):
+    
     total = 0
     for num in range(d):
         for i in range(d):
@@ -74,6 +77,7 @@ def print_field(field,d):
 """
 Checks the possible moves to make in every direction
 Add information about the neighbors of a given cell, and increase number of mines if necessary
+This function is intended for providing all the necessary information about each cell in the field
 """
 def add_knowledge(field, cell, d):
     
@@ -251,7 +255,7 @@ def simpleAgent(field, dim):
 
 
         print_info(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, cellsExplored)
-        
+       
     return minesMarked, minesExploded
 
 
@@ -266,7 +270,7 @@ def print_info(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, c
     print("Exploded mines are: " + str(minesExploded))
     print("Explored cells are: " + str(cellsExplored))
     print("\n")
-    print("The current state of the field is: ")
+    print("Field: ")
     print_field(field, dim)
     
     
@@ -404,26 +408,39 @@ def advAgent(field, dim):
                 cellsExplored.remove(temp[y])
                 
         #Print all relevant information about the current state of the field        
-        print_info(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, cellsExplored)
+        print_info_advanced(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, cellsExplored, isDone)
           
     return minesMarked, minesExploded
 
-        
+"""
+Print all relevant information
+"""
+def print_info_advanced(field, dim, cellsHidden, cellsSafe, minesMarked, minesExploded, cellsExplored, isDone):
+    
+    print("Hidden cells are: " + str(cellsHidden))
+    print("Safe cells are: " + str(cellsSafe))
+    print("Marked mines are " + str(minesMarked))
+    print("Exploded mines are: " + str(minesExploded))
+    print("Explored cells are: " + str(cellsExplored))
+    print("isDone cells are: " + str(isDone))
+    print("\n")
+    print("Field: ")
+    print_field(field, dim)       
 
 def main():
 
     mazefield =[]
-    dim=3
-    mineTotal=2
-    iterations=1
+    dim = 8
+    mineTotal = 10
+    iterations = 1
     advanced= []
     simple=[]
     mines=[]
     t=time.time()
     for x in range(iterations):
-        mazefield=generate_field(dim,mineTotal)
+        mazefield = generate_field(dim,mineTotal)
         mazefieldCopy = copy.deepcopy(mazefield)
-        mazefieldMineCount=copy.deepcopy(mazefield)
+        mazefieldMineCount = copy.deepcopy(mazefield)
         #minesdetected=simpleAgent(mazefield,dim)
         minesdetected2=advAgent(mazefieldCopy,dim)
         #advanced.append(minesdetected2)
